@@ -18,15 +18,39 @@ st.markdown("""
         border-left: 5px solid #004b87;
     }
     
-    /* ESTO ES LO NUEVO: Estilo para que las imágenes del Inicio parezcan tarjetas */
-    [data-testid="stVerticalBlock"] > div:has(img) {
+    //* 1. Controlar el tamaño de las imágenes */
+    [data-testid="stColumn"] [data-testid="stImage"]img {
+        height: 200px !important;         /* Ajusta este valor para cambiar la altura de todas */
+        object-fit: cover !important;     /* Esto evita que se deformen, las recorta proporcionalmente */
+        width: 100% !important;
+        border-radius: 10px;
+    }
+
+    /* 2. Estilo de tarjeta para las columnas de Inicio */
+    [data-testid="stColumn"] {
         background-color: white;
         padding: 15px;
         border-radius: 15px;
         box-shadow: 0 4px 10px rgba(0,0,0,0.08);
         border-bottom: 4px solid #004b87;
+        /*ayuda a que las tarjetas midan lo mismo*/
+        display:flex;
+        flex-direction: column;            
     }
-    div.stButton > button:first-child { background-color: #004b87; color: white; width: 100%; border-radius: 8px; height: 3em; font-weight: bold; }
+
+    /* 3. Evitar que el ícono del menú lateral se deforme por la regla anterior */
+    [data-testid="stSidebar"] img {
+        height: auto !important;
+        width: auto !important;
+        object-fit: contain !important;
+    }
+            
+    div.stButton > button:first-child { 
+            background-color: #004b87; 
+            color: white; width: 100%; 
+            border-radius: 8px; 
+            height: 3em; font-weight: bold; 
+            }
     .stProgress > div > div > div > div { background-color: #004b87; }
     </style>
     """, unsafe_allow_html=True)
@@ -83,7 +107,7 @@ if opcion == "🏠 Inicio":
     with col3:
         st.markdown("### 🤖 Tecnología IA")
         try:
-            st.image("imagenes/analisis.jpg", use_container_width=True)
+            st.image("imagenes/Random forest.jpg", use_container_width=True)
         except:
             st.info("Imagen: IA")
         st.caption("Motor predictivo de última generación.")
