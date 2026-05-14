@@ -26,7 +26,17 @@ st.markdown("""
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         border-left: 5px solid #004b87;
     }
+            
+    /* NUEVO: Estilos para las pestañas (Tabs) */
+    div[data-baseweb="tab-highlight"] {
+        background-color: #1E3A8A !important;
+    }
     
+    button[data-baseweb="tab"] div[data-testid="stMarkdownContainer"] p {
+        color: #1E3A8A;
+        font-weight: bold;
+    }
+            
     //* 1. Controlar el tamaño de las imágenes */
     [data-testid="stColumn"] [data-testid="stImage"]img {
         height: 200px !important;         /* Ajusta este valor para cambiar la altura de todas */

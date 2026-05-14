@@ -4,7 +4,7 @@ __pycache__/
 
 # Ignorar los datos (para que GitHub no pese y no subas info sensible)
 data/staging/*
-data/dw/*
+data/dw/*.db
 
 # Pero permitir que las carpetas existan
 !.gitkeep

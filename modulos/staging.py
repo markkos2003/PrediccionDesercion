@@ -1,45 +1,58 @@
 import streamlit as st
-
+import pandas as pd
+from servicios.database import guardar_en_staging # Necesitaremos crear esta función
 
 def mostrarStaging():
-    st.title("🔍 2. Staging Area (Zona de Aterrizaje)")
-    st.info("En esta capa se visualizan los datos crudos (Raw Data) antes de cualquier transformación.")
+    st.title("📂 2. Staging Area")
+    st.write("Revise los datos validados antes de persistirlos en la base de datos cruda.")
 
-    # Verificamos si hay datos en el diccionario que creamos en Ingesta
-    if 'diccionario_datos' in st.session_state and st.session_state['diccionario_datos']:
-        datos = st.session_state['diccionario_datos']
+    # 1. Recuperar datos del Session State
+    diccionario_datos = st.session_state.get('diccionario_datos', {})
+
+    if not diccionario_datos:
+        st.warning("⚠️ No hay datos en memoria. Por favor, cargue archivos válidos en la fase de Ingesta.")
+        return
+
+    # 2. Visualización dinámica en Tabs
+    nombres_archivos = list(diccionario_datos.keys())
+    tabs = st.tabs(nombres_archivos)
+
+    for i, nombre in enumerate(nombres_archivos):
+        df = diccionario_datos[nombre]
+        with tabs[i]:
+            # Creamos dos columnas: una para el título y otra para el botón de eliminar
+            col_tit, col_del = st.columns([4, 1])
+            
+            with col_tit:
+                st.subheader(f"Datos de: {nombre}")
+            
+            with col_del:
+                # Botón para eliminar este archivo específico del diccionario
+                if st.button("🗑️ Quitar", key=f"del_{nombre}"):
+                    del st.session_state['diccionario_datos'][nombre]
+                    st.rerun() # Recargamos para que la pestaña desaparezca inmediatamente
+
+            st.dataframe(df, use_container_width=True)
+            
+            # Botón de descarga individual (como pediste)
+            st.download_button(
+                label=f"📥 Descargar {nombre} (CSV)",
+                data=df.to_csv(index=False),
+                file_name=f"staging_{nombre}.csv",
+                mime="text/csv",
+                key=f"btn_{nombre}" # Key única para evitar errores
+            )
+
+    st.divider()
+
+    # 3. EL BOTÓN MAESTRO DE GUARDADO
+    st.info("Al presionar el botón, estos archivos se guardarán como tablas 'RAW' en SQLite.")
+    if st.button("💾 Confirmar y Guardar en SQLite"):
+        # Llamamos al servicio de base de datos
+        exito, mensaje = guardar_en_staging(diccionario_datos)
         
-        # Creamos pestañas dinámicas con los nombres de los archivos
-        nombres_archivos = list(datos.keys())
-        tabs = st.tabs(nombres_archivos)
-
-        for i, nombre in enumerate(nombres_archivos):
-            with tabs[i]:
-                st.subheader(f"Datos Crudos: {nombre}")
-                
-                # Mostramos el DataFrame original sin filtros
-                df_actual = datos[nombre]
-                
-                st.dataframe(df_actual, use_container_width=True)
-                
-                # Análisis técnico rápido para el profesor
-                st.write("---")
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.write("**Estructura Interna**")
-                    st.write(df_actual.dtypes) # Muestra si son números o texto
-                with col2:
-                    st.write("**Calidad de Datos**")
-                    null_count = df_actual.isnull().sum()
-                    st.write(null_count[null_count > 0] if null_count.sum() > 0 else "No hay nulos")
-                with col3:
-                    st.write("**Muestra Aleatoria**")
-                    st.write("Verificando consistencia...")
-                    st.dataframe(df_actual.sample(min(len(df_actual), 3)))
-
-    elif 'df_original' in st.session_state and st.session_state['df_original'] is not None:
-        # Si solo subiste UN archivo (el flujo antiguo)
-        st.subheader("Vista del archivo único cargado")
-        st.dataframe(st.session_state['df_original'], use_container_width=True)
-    else:
-        st.error("⚠️ No se detectaron datos. Por favor, cargue archivos en la Fase 1.")
+        if exito:
+            st.success(f"✅ {mensaje}")
+            st.balloons()
+        else:
+            st.error(f"❌ Error al guardar: {mensaje}")
