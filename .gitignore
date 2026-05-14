@@ -1,0 +1,10 @@
+# Ignorar carpetas de Python
+__pycache__/
+.venv/
+
+# Ignorar los datos (para que GitHub no pese y no subas info sensible)
+data/staging/*
+data/dw/*
+
+# Pero permitir que las carpetas existan
+!.gitkeep
