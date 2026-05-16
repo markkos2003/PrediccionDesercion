@@ -46,7 +46,20 @@ def mostrarIngesta():
             # 4. Guardar en Session State para Staging
             # IMPORTANTE: Aquí solo guardamos en memoria. 
             # El botón de "Confirmar y Guardar en SQLite" estará en la pantalla de STAGING.
-            st.session_state['diccionario_datos'] = dfs_validados
-            st.info("💡 Los archivos han sido validados. Diríjase a la pestaña **2. Staging Area** para confirmar el guardado en la base de datos.")
+            #st.session_state['diccionario_datos'] = dfs_validados
+            #st.info("💡 Los archivos han sido validados. Diríjase a la pestaña **2. Staging Area** para confirmar el guardado en la base de datos.")
+
+            # 4. GUARDADO ACUMULATIVO EN EL SESSION STATE (CAMBIO CLAVE)
+            # Si la caja de datos no existe en memoria, la inicializamos vacía
+            if 'diccionario_datos' not in st.session_state:
+                st.session_state['diccionario_datos'] = {}
+            
+            # Usamos .update() para AÑADIR los nuevos dataframes sin borrar los anteriores
+            st.session_state['diccionario_datos'].update(dfs_validados)
+            
+            # Mensaje informativo dinámico para el usuario
+            total_acumulado = len(st.session_state['diccionario_datos'])
+            st.success(f"✨ Archivos procesados con éxito. Total acumulado para Staging: {total_acumulado} archivo(s).")
+            st.info("💡 Diríjase a la pestaña **2. Staging Area** para revisar el contenido total y confirmar el guardado.")
         else:
             st.warning("No hay archivos válidos para procesar.")

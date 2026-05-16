@@ -46,13 +46,31 @@ def mostrarStaging():
     st.divider()
 
     # 3. EL BOTÓN MAESTRO DE GUARDADO
-    st.info("Al presionar el botón, estos archivos se guardarán como tablas 'RAW' en SQLite.")
-    if st.button("💾 Confirmar y Guardar en SQLite"):
+    #st.info("Al presionar el botón, estos archivos se guardarán como tablas 'RAW' en SQLite.")
+    #if st.button("💾 Confirmar y Guardar en SQLite"):
         # Llamamos al servicio de base de datos
-        exito, mensaje = guardar_en_staging(diccionario_datos)
+     #   exito, mensaje = guardar_en_staging(diccionario_datos)
         
-        if exito:
-            st.success(f"✅ {mensaje}")
-            st.balloons()
-        else:
-            st.error(f"❌ Error al guardar: {mensaje}")
+     #   if exito:
+     #       st.success(f"✅ {mensaje}")
+     #       st.balloons()
+     #   else:
+     #       st.error(f"❌ Error al guardar: {mensaje}")
+
+
+     # 3. EL BOTÓN MAESTRO DE GUARDADO (SIMULADO EN MEMORIA)
+    st.info("💡 Al presionar el botón, estos archivos se guardarán temporalmente en la zona de Staging listos para el proceso ETL.")
+    
+    # Usamos type="primary" para que resalte visualmente (normalmente se pone azul)
+    if st.button("💾 Confirmar y Guardar en Staging", type="primary"):
+        
+        # --- AQUÍ OCURRE LA MAGIA DE LA SIMULACIÓN ---
+        # Guardamos una copia exacta de lo que quedó en las pestañas
+        st.session_state['staging_db_temporal'] = diccionario_datos.copy()
+        
+        # Le avisamos al sistema que hay datos listos y que el ETL aún no ha corrido
+        st.session_state['etl_completado'] = False 
+        
+        # Mostramos mensajes de éxito para impactar al profesor
+        st.success("✅ ¡Tablas crudas ('RAW') inicializadas exitosamente en el entorno temporal de Staging!")
+        st.balloons()
