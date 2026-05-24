@@ -3,14 +3,14 @@ import pandas as pd
 import time
 
 #importaciones de las pantallas
-from modulos.inicio import mostrarInicio
-from modulos.ingesta import mostrarIngesta
-from modulos.staging import mostrarStaging
-from modulos.etl import mostrarEtl
-from modulos.modelo import mostrarModelo
-from modulos.motorIA import mostrarMotor
-from modulos.semantica import mostrarSemantica
-from modulos.dashboard import mostrarDashboard
+from frontend.inicio import mostrarInicio
+from frontend.ingesta import mostrarIngesta
+from frontend.staging import mostrarStaging
+from frontend.etl import mostrarEtl
+from frontend.modelo import mostrarModelo
+from frontend.motorIA import mostrarMotor
+from frontend.semantica import mostrarSemantica
+from frontend.dashboard import mostrarDashboard
 # 1. Configuración de Estilo y Página
 st.set_page_config(page_title="MIRA - Sistema Predictivo Lima Norte", layout="wide")
 
@@ -79,13 +79,11 @@ if 'df_original' not in st.session_state:
     st.session_state['df_original'] = None
 if 'etapas_completadas' not in st.session_state:
     st.session_state['etapas_completadas'] = {"ETL": False, "IA": False}
-
-# 3. Menú Lateral con Iconos
-with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/3135/3135810.png", width=100)
-    st.title("Arquitectura BI")
-    st.write("---")
-    opcion = st.radio("Seleccione una Fase:", [
+#Control central de navegacion inicializacion
+if 'fase_actual' not in st.session_state:
+    st.session_state['fase_actual']="🏠 Inicio"
+#lista con el nombre de las pantallas
+lista_fases=[
         "🏠 Inicio",
         "📥 1. Fuentes de Datos",
         "🔍 2. Staging Area",
@@ -94,7 +92,29 @@ with st.sidebar:
         "🤖 5. Motor de IA",
         "📊 6. Capa Semántica",
         "📈 7. Dashboard Final"
-    ])
+]    
+
+# 3. Menú Lateral con Iconos
+with st.sidebar:
+    st.image("https://cdn-icons-png.flaticon.com/512/3135/3135810.png", width=100)
+    st.title("Arquitectura BI")
+    st.write("---")
+    #buscamos en que posicion numerica de la lista se encuwentra la pantalla actual
+    try:
+        indice_actual=lista_fases.index(st.session_state['fase_actual'])
+    except ValueError:
+        indice_actual=0
+    #el radio button se actualiza usando el parametro index
+    opcion = st.radio("Seleccione una Fase:",lista_fases,index=indice_actual)
+
+#Esto es para cuando el usuario haga click en la barra lateral
+if opcion !=st.session_state['fase_actual']:
+    st.session_state['fase_actual']=opcion 
+    st.rerun()   
+
+#Evaluacion directamente la variable de memoria del sistema 
+fase_activa=st.session_state['fase_actual']
+
 
 # --- LÓGICA DE LAS PANTALLAS ---
 

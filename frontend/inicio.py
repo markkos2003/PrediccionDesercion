@@ -1,5 +1,8 @@
 import streamlit as st
 
+#importaciones
+from servicios.botones import verBotones
+
 def mostrarInicio():
     # Título Principal con estilo
     st.markdown("<h1 style='text-align: center; color: #004b87;'>MIRA: Monitor de Indicadores de Riesgo Académico</h1>", unsafe_allow_html=True)
@@ -41,4 +44,4 @@ def mostrarInicio():
     
     """)
     st.info("¿Cómo empezar? Navegue al menú de la izquierda y comience cargando los archivos en la fase 1: Fuentes de Datos.")
-    
+    verBotones(pantalla_anterior=None, pantalla_siguiente="📥 1. Fuentes de Datos")

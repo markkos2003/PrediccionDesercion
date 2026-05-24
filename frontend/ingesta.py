@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 from servicios.validacion import validar_archivos_entrada # Importamos tu servicio
-
+from servicios.botones import verBotones
 def mostrarIngesta():
     st.title("📥 1. Ingesta de Datos Multiformato")
     st.write("Cargue los archivos de la universidad para su validación técnica.")
@@ -63,3 +63,8 @@ def mostrarIngesta():
             st.info("💡 Diríjase a la pestaña **2. Staging Area** para revisar el contenido total y confirmar el guardado.")
         else:
             st.warning("No hay archivos válidos para procesar.")
+    
+    
+    
+    
+    verBotones(pantalla_anterior="🏠 Inicio", pantalla_siguiente="🔍 2. Staging Area")       
