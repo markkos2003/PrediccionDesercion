@@ -19,7 +19,7 @@ from conexionNDB import obtener_conexion
 
 
 # 1. Configuración de Estilo y Página
-st.set_page_config(page_title="MIRA - Sistema Predictivo Lima Norte", layout="wide")
+st.set_page_config(page_title="PLATAFORMA BI INTEGRADA - PREDICCIÓN DESERCIÓN UNIVERSITARIA", layout="wide")
 
 
 #--------------------------
