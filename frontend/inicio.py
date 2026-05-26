@@ -5,7 +5,7 @@ from servicios.botones import verBotones
 
 def mostrarInicio():
     # Título Principal con estilo
-    st.markdown("<h1 style='text-align: center; color: #004b87;'>MIRA: Monitor de Indicadores de Riesgo Académico</h1>", unsafe_allow_html=True)
+    st.markdown("<h1 style='text-align: center; color: #004b87;'>PLATAFORMA BI INTEGRADA - Identificación del riesgo de abandono académico</h1>", unsafe_allow_html=True)
     st.markdown("<h3 style='text-align: center; color: #475569;'>Predicción de Deserción Universitaria - Lima Norte</h3>", unsafe_allow_html=True)
     
     st.write("---") # Línea divisoria
