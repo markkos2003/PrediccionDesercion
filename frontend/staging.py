@@ -1,8 +1,10 @@
 import streamlit as st
 import pandas as pd
 from servicios.database import guardar_en_staging # Necesitaremos crear esta función
+#importaciones
+from servicios.botones import verBotones
 
-def mostrarStaging():
+def mostrarStaging(conn):
     st.title("📂 2. Staging Area")
     st.write("Revise los datos validados antes de persistirlos en la base de datos cruda.")
 
@@ -63,14 +65,46 @@ def mostrarStaging():
     
     # Usamos type="primary" para que resalte visualmente (normalmente se pone azul)
     if st.button("💾 Confirmar y Guardar en Staging", type="primary"):
+        # Creamos una barra de progreso visual para la sustentación
+        progreso_bar = st.progress(0)
+        status_text = st.empty()
+        
+        try:
+            total_registros = 0
+            archivos_procesados = list(diccionario_datos.keys())
+            num_archivos = len(archivos_procesados)
+            
+            # Iteramos sobre cada archivo subido en el diccionario
+            for index, nombre_archivo in enumerate(archivos_procesados):
+                status_text.text(f"Transfiriendo a la nube: {nombre_archivo}...")
+                df_actual = diccionario_datos[nombre_archivo]
+                
+                # Volcado directo de cada DataFrame a la tabla 'staging_excel' de Neon
+                # 'if_exists="append"' permite que si subes 2 archivos, se sumen en la misma tabla
+                df_actual.to_sql("staging_excel", con=conn.engine, if_exists="append", index=False)
+                
+                total_registros += len(df_actual)
+                # Actualizar barra de progreso proporcionalmente
+                progreso_bar.progress(int((index + 1) / num_archivos * 100))
+            
         
         # --- AQUÍ OCURRE LA MAGIA DE LA SIMULACIÓN ---
         # Guardamos una copia exacta de lo que quedó en las pestañas
-        st.session_state['staging_db_temporal'] = diccionario_datos.copy()
+            st.session_state['staging_db_temporal'] = diccionario_datos.copy()
         
         # Le avisamos al sistema que hay datos listos y que el ETL aún no ha corrido
-        st.session_state['etl_completado'] = False 
+            st.session_state['etl_completado'] = False 
         
         # Mostramos mensajes de éxito para impactar al profesor
-        st.success("✅ ¡Tablas crudas ('RAW') inicializadas exitosamente en el entorno temporal de Staging!")
-        st.balloons()
+            st.success("✅ ¡Tablas crudas ('RAW') inicializadas exitosamente en el entorno temporal de Staging!")
+            st.balloons()
+
+        except Exception as e:
+            status_text.empty()
+            progreso_bar.empty()
+            st.error(f"❌ Error crítico de escritura en Neon Cloud: {e}")
+            st.info("💡 Verifica que las columnas de tus archivos Excel coincidan exactamente con los nombres de la tabla 'staging_excel' en la base de datos.")
+
+       
+
+    verBotones(pantalla_anterior="📥 1. Fuentes de Datos", pantalla_siguiente="⚙️ 3. Proceso ETL")   

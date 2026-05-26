@@ -11,8 +11,26 @@ from frontend.modelo import mostrarModelo
 from frontend.motorIA import mostrarMotor
 from frontend.semantica import mostrarSemantica
 from frontend.dashboard import mostrarDashboard
+
+#importacion especial
+from conexionNDB import obtener_conexion
+
+
+
+
 # 1. Configuración de Estilo y Página
 st.set_page_config(page_title="MIRA - Sistema Predictivo Lima Norte", layout="wide")
+
+
+#--------------------------
+try:
+    conn = obtener_conexion()
+    # Hacemos una consulta rápida al sistema para verificar que el puente funcione
+    conn.query("SELECT 1 as prueba;", ttl=0)
+    st.sidebar.success("🟢 Conectado a Neon Cloud")
+except Exception as e:
+    st.sidebar.error(f"🔴 Error de conexión a Neon: {e}")
+#-------------------------------------------------------------------
 
 # CSS para mejorar el aspecto visual (Colores y Tarjetas)
 st.markdown("""
@@ -127,17 +145,17 @@ elif opcion == "📥 1. Fuentes de Datos":
 
 
 elif opcion == "🔍 2. Staging Area":
-    mostrarStaging()
+    mostrarStaging(conn)
 elif opcion == "⚙️ 3. Proceso ETL":
-    mostrarEtl()
+    mostrarEtl(conn)
 
 elif opcion == "❄️ 4. Modelo Copo de Nieve":
-    mostrarModelo()
+    mostrarModelo(conn)
 
 elif opcion == "🤖 5. Motor de IA":
-    mostrarMotor()
+    mostrarMotor(conn)
 elif opcion == "📊 6. Capa Semántica":
-    mostrarSemantica()
+    mostrarSemantica(conn)
 
 elif opcion == "📈 7. Dashboard Final":
     mostrarDashboard()
