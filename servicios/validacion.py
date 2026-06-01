@@ -4,15 +4,15 @@ def validar_archivos_entrada(archivos_subidos):
     dict_validados = {}
     errores = []
     
-    # Columnas que esperamos encontrar (en minúsculas para comparar)
-    # Si es JSON, al menos debe tener alguna de estas llaves
-    COLUMNAS_MINIMAS = ['dni', 'alumno', 'nota', 'codigo', 'curso', 'id', 'pension','carrera']
+    # 🚀 OPTIMIZACIÓN: Añadimos 'nombre' y 'completo' para capturar 'nombre_completo' con seguridad
+    COLUMNAS_MINIMAS = ['dni', 'alumno', 'nota', 'codigo', 'curso', 'id', 'pension', 'carrera', 'nombre', 'completo']
 
     for archivo in archivos_subidos:
         try:
             # --- CAPA 1: Lectura según formato ---
             if archivo.name.endswith('.csv'):
-                df = pd.read_csv(archivo)
+                # 🚀 SOLUCIÓN AL SEPARADOR: sep=None y engine='python' detectan automáticamente si usa coma (,) o punto y coma (;)
+                df = pd.read_csv(archivo, sep=None, engine='python')
             elif archivo.name.endswith('.json'):
                 df = pd.read_json(archivo)
             else:
@@ -26,8 +26,12 @@ def validar_archivos_entrada(archivos_subidos):
             # Convertimos columnas a minúsculas para una validación flexible
             columnas_presentes = [str(c).lower() for c in df.columns]
             
-            # Verificamos si hay intersección entre lo que subió y lo que necesitamos
-            es_valido = any(col in columnas_presentes for col in COLUMNAS_MINIMAS)
+            # 🚀 SOLUCIÓN A LAS CABECERAS COMPUESTAS:
+            # Ahora verifica si la palabra clave (ej. 'codigo') está CONTENIDA dentro de alguna columna (ej. 'codigo_universitario')
+            es_valido = any(
+                any(minima in col for col in columnas_presentes) 
+                for minima in COLUMNAS_MINIMAS
+            )
 
             if not es_valido:
                 errores.append(f"❌ {archivo.name}: No contiene campos reconocidos del proyecto (DNI, Notas, etc.).")

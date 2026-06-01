@@ -1,6 +1,13 @@
-# Ignorar carpetas de Python
+# 3. BASURA LOCAL DE PYTHON 
 __pycache__/
-.venv/
+*/__pycache__/
+**/__pycache__/
+*.pyc
+
+# 2. CREDENCIALES Y SECRETOS DE CONFIGURACIÓN 
+.streamlit/secrets.toml
+.streamlit/config.toml
+*.env
 
 # Ignorar los datos (para que GitHub no pese y no subas info sensible)
 data/staging/*
