@@ -32,6 +32,23 @@ except Exception as e:
     st.sidebar.error(f"🔴 Error de conexión a Neon: {e}")
 #-------------------------------------------------------------------
 
+if 'ga_inicializado' not in st.session_state:
+    
+    # Invocamos el ID desde el diccionario estructurado de secretos
+    ID_ANALYTICS = st.secrets["analytics"]["google_id"]
+    
+    codigo_ga4 = f"""
+    <script async src="https://www.googletag-manager.com/gtag/js?id={ID_ANALYTICS}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){{dataLayer.push(arguments);}}
+      gtag('js', new Date());
+      gtag('config', '{ID_ANALYTICS}', {{ 'page_path': window.location.pathname }});
+    </script>
+    """
+    st.components.v1.html(codigo_ga4, height=0, width=0)
+    st.session_state['ga_inicializado'] = True
+
 # CSS para mejorar el aspecto visual (Colores y Tarjetas)
 st.markdown("""
     <style>

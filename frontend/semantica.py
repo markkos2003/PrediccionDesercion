@@ -6,8 +6,16 @@ def mostrarSemantica(conn): # <--- 1. Recibimos el parámetro 'conn' desde app.p
     st.title("📊 6. Capa Semántica y Reglas de Negocio") # Ajustado correlativo visual de tu menú
     st.write("Definición lógica de indicadores clave (KPIs) calculados desde el esquema Copo de Nieve.")
 
+    try:
+        # Consultamos rápidamente si la tabla FactKPIs ya tiene registros guardados físicamente
+        df_conteo_kpis = conn.query('SELECT COUNT(*) as total FROM "FactKPIs";', ttl=0)
+        db_tiene_kpis = int(df_conteo_kpis['total'].iloc[0]) > 0
+    except Exception:
+        # Si la tabla aún no existe o hay error de red, asumimos falso temporalmente
+        db_tiene_kpis = False
+
     # 2. Validar que el ETL y las lógicas previas ya se ejecutaron
-    if not st.session_state.get('etl_completado', False):
+    if not st.session_state.get('etl_completado', False) and not db_tiene_kpis:
         st.info("📌 No se registran datos agregados en la capa semántica. Por favor, ejecute el proceso ETL primero.")
         verBotones(pantalla_anterior="🤖 5. Motor de IA", pantalla_siguiente="📈 7. Dashboard Final")
         return

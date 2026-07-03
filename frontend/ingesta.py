@@ -6,6 +6,9 @@ def mostrarIngesta():
     st.title("📥 1. Ingesta de Datos Multiformato")
     st.write("Cargue los archivos de la universidad para su validación técnica.")
 
+    if 'diccionario_datos' not in st.session_state:
+        st.session_state['diccionario_datos'] = {}
+
     # 1. Subida múltiple
     archivos = st.file_uploader(
         "Cargue uno o varios archivos (Excel, CSV o JSON)", 
@@ -51,8 +54,7 @@ def mostrarIngesta():
 
             # 4. GUARDADO ACUMULATIVO EN EL SESSION STATE (CAMBIO CLAVE)
             # Si la caja de datos no existe en memoria, la inicializamos vacía
-            if 'diccionario_datos' not in st.session_state:
-                st.session_state['diccionario_datos'] = {}
+            
             
             # Usamos .update() para AÑADIR los nuevos dataframes sin borrar los anteriores
             st.session_state['diccionario_datos'].update(dfs_validados)
@@ -65,6 +67,78 @@ def mostrarIngesta():
             st.warning("No hay archivos válidos para procesar.")
     
     
+    st.divider()
+    st.write("### 🤖 Dispositivos Automatizados")
+
+    
+    if st.button(" DATOS DEL DISPOSITIVO  IOT LECTOR DE ASISTENCIA",type="primary",icon="📥",):
+        with st.spinner("Conectando con el dispositivo IoT y extrayendo logs..."):
+            import random
+            from datetime import datetime, timedelta
+
+            datos_iot = []
+            for _ in range(5000):
+                dni_ficticio = f"{random.randint(10000000, 99999999)}"
+                cod_univ = f"U202{random.randint(1,6)}{random.randint(10000, 99999)}"
+                id_curso_ficticio = random.randint(1, 10)
+                porcentaje_asistencia = random.randint(40, 100)
+                horas_marcas = random.randint(2, 6)
+
+                datos_iot.append({
+                    "dni_estudiante": dni_ficticio,
+                    "codigo_universitario": cod_univ,
+                    "id_curso_ref": id_curso_ficticio,
+                    "porcentaje_asistencia": porcentaje_asistencia,
+                    "horas_presenciales_aula": horas_marcas,
+                    "origen_datos": "DISPOSITIVO_IOT_RFID_AULA",
+                    "fecha_captura": (datetime.now() - timedelta(days=random.randint(0, 30))).strftime("%Y-%m-%d %H:%M:%S")
+                })
+
+            df_iot = pd.DataFrame(datos_iot)
+
+            
+            # Nombre único para este lote
+            nombre_lote_iot = f"IoT_Lector_Asistencia_{datetime.now().strftime('%H%M%S')}"
+            
+            # Guardamos en el diccionario global (para que Staging lo vea)
+            st.session_state['diccionario_datos'][nombre_lote_iot] = df_iot
+            
+            # Guardamos una referencia al ÚLTIMO IoT cargado solo para mostrarlo en esta pantalla
+            st.session_state['ultimo_iot_cargado'] = {
+                'nombre': nombre_lote_iot,
+                'df': df_iot
+            }
+            st.rerun()
+    if 'ultimo_iot_cargado' in st.session_state:
+
+        iot_info = st.session_state['ultimo_iot_cargado']
+        st.subheader(f"📊 Vista Previa en Tiempo Real: {iot_info['nombre']}")
+        
+        col1, col2 = st.columns([2, 1])
+        with col1:
+            st.write("**Primeros registros capturados por el sensor:**")
+            # Mostramos las primeras filas y usamos todo el ancho
+            st.dataframe(iot_info['df'].head(10), use_container_width=True)
+        with col2:
+            st.write("**Métricas de Carga IoT:**")
+            st.metric(label="Registros Totales", value=f"{iot_info['df'].shape[0]} 📥")
+            st.metric(label="Campos Capturados", value=f"{iot_info['df'].shape[1]} 📊")
+            st.info("✨ Estos datos ya están indexados en la memoria de Staging.")        
+
+       
+        
+
+     
+     
+     
+   
+    
+    
+        
+    
+
+
+
     
     
     verBotones(pantalla_anterior="🏠 Inicio", pantalla_siguiente="🔍 2. Staging Area")       

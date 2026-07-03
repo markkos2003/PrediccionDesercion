@@ -63,9 +63,7 @@ def mostrarStaging(conn):
      # 3. EL BOTÓN MAESTRO DE GUARDADO (SIMULADO EN MEMORIA)
     st.info("💡 Al presionar el botón, estos archivos se guardarán temporalmente en la zona de Staging listos para el proceso ETL.")
     
-    # Usamos type="primary" para que resalte visualmente (normalmente se pone azul)
     if st.button("💾 Confirmar y Guardar en Staging", type="primary"):
-        # Creamos una barra de progreso visual para la sustentación
         progreso_bar = st.progress(0)
         status_text = st.empty()
         
@@ -74,37 +72,91 @@ def mostrarStaging(conn):
             archivos_procesados = list(diccionario_datos.keys())
             num_archivos = len(archivos_procesados)
             
-            # Iteramos sobre cada archivo subido en el diccionario
             for index, nombre_archivo in enumerate(archivos_procesados):
-                status_text.text(f"Transfiriendo a la nube: {nombre_archivo}...")
-                df_actual = diccionario_datos[nombre_archivo]
+                status_text.text(f"Preparando y transfiriendo: {nombre_archivo}...")
+                df_actual = diccionario_datos[nombre_archivo].copy() # Usamos una copia para no alterar la vista previa
                 
-                # Volcado directo de cada DataFrame a la tabla 'staging_excel' de Neon
-                # 'if_exists="append"' permite que si subes 2 archivos, se sumen en la misma tabla
+                # -------------------------------------------------------------
+                # MAGIA DEL ETL DE STAGING: ADAPTACIÓN DE ESTRUCTURA IOT
+                # -------------------------------------------------------------
+                if "IoT_Lector" in nombre_archivo:
+                    # 1. Renombramos las columnas para que coincidan EXACTAMENTE con tu tabla de Neon
+                    df_actual = df_actual.rename(columns={
+                        "dni_estudiante": "dni",
+                        "id_curso_ref": "curso" # Temporalmente mapeamos el ID al campo curso en staging
+                    })
+                    
+                    # 2. Creamos las columnas faltantes con None (NULL) para que pandas arme el match perfecto
+                    columnas_neon = [
+                        "nombre_completo", "sexo", "edad", "estado_civil", "colegio_procedencia", 
+                        "distrito", "universidad", "tipo_universidad", "categoria_pension", "carrera", 
+                        "facultad", "modalidad", "nivel_ingresos", "trabaja", "tiempo_traslado_min", 
+                        "medio_transporte", "conectividad_internet", "estado_emocional", "nivel_estres", 
+                        "apoyo_psicologico", "area_academica", "curso_filtro", "creditos", "mes", 
+                        "ciclo_academico", "anio", "nota_final_curso", "deuda_pensiones_soles", "horas_lms_virtual"
+                    ]
+                    for col in columnas_neon:
+                        if col not in df_actual.columns:
+                            df_actual[col] = None
+                    
+                    # 3. Eliminamos columnas excedentes que creamos en el simulador y que Neon no espera
+                    columnas_a_eliminar = ["horas_presenciales_aula", "origen_datos", "fecha_captura"]
+                    df_actual = df_actual.drop(columns=[c for c in columnas_a_eliminar if c in df_actual.columns])
+                # -------------------------------------------------------------
+                
+                # Volcado directo a la tabla unificada en Neon Cloud
                 df_actual.to_sql("staging_excel", con=conn.engine, if_exists="append", index=False)
                 
                 total_registros += len(df_actual)
-                # Actualizar barra de progreso proporcionalmente
                 progreso_bar.progress(int((index + 1) / num_archivos * 100))
             
-        
-        # --- AQUÍ OCURRE LA MAGIA DE LA SIMULACIÓN ---
-        # Guardamos una copia exacta de lo que quedó en las pestañas
+            # Guardamos copia de control en memoria
             st.session_state['staging_db_temporal'] = diccionario_datos.copy()
-        
-        # Le avisamos al sistema que hay datos listos y que el ETL aún no ha corrido
-            st.session_state['etl_completado'] = False 
-        
-        # Mostramos mensajes de éxito para impactar al profesor
-            st.success("✅ ¡Tablas crudas ('RAW') inicializadas exitosamente en el entorno temporal de Staging!")
+            st.session_state['etl_completado'] = False
+            st.session_state['datos_subidos_a_neon'] = True 
+            
+            status_text.empty()
+            progreso_bar.empty()
+            
+            st.success(f"✅ ¡Éxito! Se insertaron {total_registros:,} registros crudos en la tabla 'staging_excel' de Neon.")
             st.balloons()
 
         except Exception as e:
             status_text.empty()
             progreso_bar.empty()
             st.error(f"❌ Error crítico de escritura en Neon Cloud: {e}")
-            st.info("💡 Verifica que las columnas de tus archivos Excel coincidan exactamente con los nombres de la tabla 'staging_excel' en la base de datos.")
+    
+    if st.session_state.get('datos_subidos_a_neon', False):
+        st.divider()
+        st.subheader("☁️ Base de Datos Física: Tabla `staging_excel` en Neon")
+        st.write("La siguiente tabla representa una consulta directa en tiempo real (`SELECT *`) a tu infraestructura en la nube:")
+        
+        with st.spinner("Realizando consulta a Neon Cloud..."):
+            try:
+                # 1. Consultamos los últimos 500 registros ingresados a la tabla de staging
+                # Usamos ctid DESC en PostgreSQL para traer los registros más recientes muy rápido
+                query_muestra = "SELECT * FROM staging_excel ORDER BY ctid DESC LIMIT 500;"
+                df_neon_real = pd.read_sql(query_muestra, con=conn.engine)
+                
+                # 2. Consultamos la cantidad total histórica de filas en la tabla para mostrar métricas reales
+                query_conteo = "SELECT COUNT(*) as total FROM staging_excel;"
+                total_en_bd = pd.read_sql(query_conteo, con=conn.engine).iloc[0]['total']
+                
+                # Diseño de métricas superiores para impresionar en la sustentación
+                col_m1, col_m2 = st.columns(2)
+                with col_m1:
+                    st.metric(label="📊 Volumen Total en Staging (Neon)", value=f"{total_en_bd:,} filas")
+                with col_m2:
+                    st.metric(label="🌐 Estado del Servidor", value="Conectado (Cloud)", delta="Online")
+                
+                # 3. Renderizado del DataFrame directo de la Nube
+                st.dataframe(df_neon_real, use_container_width=True)
+                st.caption("ℹ️ Muestra de los últimos 500 registros indexados en Neon Cloud. Los datos están listos para la Fase 3: Proceso ETL.")
+                
+            except Exception as e:
+                st.warning(f"⚠️ Los datos se subieron, pero hubo un problema al leer la vista previa de Neon: {e}")
 
+    st.divider()
        
 
     verBotones(pantalla_anterior="📥 1. Fuentes de Datos", pantalla_siguiente="⚙️ 3. Proceso ETL")   

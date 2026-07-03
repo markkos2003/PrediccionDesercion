@@ -20,6 +20,7 @@ def ejecutarPrediccionEstudiantes(conn):
             INNER JOIN dim_tiempo t     ON f.id_tiempo = t.id;
         """
         df_nuevos = conn.query(query, ttl=0)
+        df_nuevos = df_nuevos.drop_duplicates(subset=['Nombre', 'nota_final_curso', 'porcentaje_asistencia'])
         
         if df_nuevos.empty:
             return pd.DataFrame(), "No existen alumnos cargados en el Data Warehouse."
