@@ -1,6 +1,37 @@
 import streamlit as st
 import pandas as pd
 import time
+import pathlib
+
+def inyectar_analitica_segura():
+    try:
+        analytics_id = st.secrets["analytics"]["google_id"]
+        
+        # Script oficial que forzamos a ejecutarse directamente en el cuerpo del DOM
+        ga_js = f"""
+        <script>
+            // Forzar la creación del script de gtag manager en el documento principal
+            if (!document.getElementById('google-analytics-gtag')) {{
+                var script = document.createElement('script');
+                script.id = 'google-analytics-gtag';
+                script.async = true;
+                script.src = 'https://www.googletagmanager.com/gtag/js?id={analytics_id}';
+                document.head.appendChild(script);
+                
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){{dataLayer.push(arguments);}}
+                window.gtag = gtag;
+                gtag('js', new Date());
+                gtag('config', '{analytics_id}', {{
+                    'page_path': window.location.pathname
+                }});
+            }}
+        </script>
+        """
+        # Inyectamos el tag script directamente usando un contenedor markdown de Streamlit
+        st.markdown(ga_js, unsafe_allow_html=True)
+    except Exception as e:
+        st.write(f"Error de analítica: {e}")
 
 #importaciones de las pantallas
 from frontend.inicio import mostrarInicio
@@ -32,22 +63,6 @@ except Exception as e:
     st.sidebar.error(f"🔴 Error de conexión a Neon: {e}")
 #-------------------------------------------------------------------
 
-if 'ga_inicializado' not in st.session_state:
-    
-    # Invocamos el ID desde el diccionario estructurado de secretos
-    ID_ANALYTICS = st.secrets["analytics"]["google_id"]
-    
-    codigo_ga4 = f"""
-    <script async src="https://www.googletag-manager.com/gtag/js?id={ID_ANALYTICS}"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){{dataLayer.push(arguments);}}
-      gtag('js', new Date());
-      gtag('config', '{ID_ANALYTICS}', {{ 'page_path': window.location.pathname }});
-    </script>
-    """
-    st.components.v1.html(codigo_ga4, height=0, width=0)
-    st.session_state['ga_inicializado'] = True
 
 # CSS para mejorar el aspecto visual (Colores y Tarjetas)
 st.markdown("""
@@ -108,6 +123,8 @@ st.markdown("""
     .stProgress > div > div > div > div { background-color: #004b87; }
     </style>
     """, unsafe_allow_html=True)
+# ---> AGREGA ESTA LÍNEA AQUÍ:
+inyectar_analitica_segura()
 
 # 2. Gestión de Memoria (Session State) para que sea DINÁMICO
 if 'df_original' not in st.session_state:
